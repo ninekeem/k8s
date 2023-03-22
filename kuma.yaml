@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kuma
+  labels:
+    app: kuma
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kuma
+  template:
+    metadata:
+      labels:
+        app: kuma
+    spec:
+      hostNetwork: false
+      containers:
+      - name: kuma
+        image: docker.io/louislam/uptime-kuma
+        ports:
+        - containerPort: 3001
+          name: kuma
+        volumeMounts:
+        - mountPath: /app/data
+          name: kuma
+      nodeSelector:
+        kubernetes.io/hostname: 'e8400'
+      volumes:
+      - name: kuma
+        hostPath:
+          # directory location on host
+          path: /opt/kuma
+          # this field is optional
+          type: Directory
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kuma
+spec:
+  ports:
+  - name: kuma
+    protocol: TCP
+    port: 3001
+    targetPort: kuma
+  selector:
+    app: kuma
+  type: LoadBalancer
+status:
+  loadBalancer:
+    ingress:
+    - ip: 192.168.0.12
